@@ -10,14 +10,14 @@ L3 = 0.75  # длина корпуса, м
 M1 = 9.9  # масса бедра, кг
 M2 = 7.2  # масса голени, кг
 M3 = 25.  # масса корпуса, кг
-h = 1.11  # высота точки подвеса
+h = 1.09  # высота точки подвеса
 s = 0.2  # опорный сдвиг
 L_step = 0.5  # длина шага
-Ampl = 0.2  # амплитуда синусоиды движения переносной ноги
+Ampl = 0.05  # амплитуда синусоиды движения переносной ноги
 T = 1.1  # период двойного шага
 omega = 2 * 3.14 / T  # угловая скорость
 dt = 0.05  # изменение времени
-t = np.arange(0, 7, dt)
+t = np.arange(0, 7.7, dt)
 
 
 def find_knee(x1, y1, x2, y2):
@@ -107,17 +107,44 @@ if __name__ == "__main__":
     x0 = np.linspace(0, 7, len(t))
     y0 = np.ones(len(t)) * h
     # пятка 1
-    # x1_2 = L_step / np.pi / 2 * (2*t - np.sin(omega*t)) - 1.55
-    # y1_2 = L_step * 0.1 *(1 - np.cos(omega*t))
-    x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
-    y1_2 = L_step * 0.1 * (1 - np.cos(omega * t))
+    # x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
+    # y1_2 = Ampl * (1 - np.cos(omega * t))
+    period = np.arange(0, 1.1, dt)
+    half = np.arange(0, 0.55, dt)
+    x1_2p = np.copy(period)  # period - L_step /2 * np.sin(omega * period)
+    x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / np.pi * np.sin(omega * half)
+    x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
+    x1_2 = np.copy(x0)
+    for i in range(7):
+        x1_2[i * 22: (i + 1) * 22] = x1_2p + np.ones(22) * (x0[i * 22] - L_step / 2)  # -np.ones(22)*0.2
+
+    y1_2p = np.zeros(len(period))
+    y1_2p[:] = Ampl * (1 - np.cos(omega * period * 2))
+    y1_2p[len(x1_2p) // 2:] = 0
+    y1_2 = np.zeros(len(t))
+    for i in range(7):
+        y1_2[i * 22: (i + 1) * 22] = y1_2p
+
     # колено 1
     print("finding coordinates of knee1...")
     x1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[0] for i in range(len(t))]
     y1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[1] for i in range(len(t))]
     # пятка 2
-    x2_2 = t + L_step / np.pi * (- np.sin(omega * t - np.pi))
-    y2_2 = L_step * 0.1 * (1 - np.cos(omega * t - np.pi))
+    # x2_2 = t + L_step / np.pi * (- np.sin(omega * t - np.pi))
+    x2_2p = np.copy(period) #-L_step / 2 * np.sin(omega * period - np.pi)
+
+    x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / np.pi * np.sin(omega * half) #+np.pi
+    x2_2p[:len(x2_2p) // 2] = x2_2p[0]
+    x2_2 = np.copy(x0)
+    for i in range(7):
+        x2_2[i * 22: (i + 1) * 22] = x2_2p + np.ones(22) * (x0[i * 22] + L_step/2)
+    #y2_2 = Ampl * (1 - np.cos(omega * t - np.pi))
+    y2_2p = np.zeros(len(period))
+    y2_2p[:] = Ampl * (1 - np.cos(omega * period * 2))
+    y2_2p[:len(x1_2p) // 2] = 0
+    y2_2 = np.zeros(len(t))
+    for i in range(7):
+        y2_2[i * 22: (i + 1) * 22] = y2_2p
     # колено 2
     print("finding coordinates of knee2...")
     x2_1 = [find_knee(x0[i], y0[i], x2_2[i], y2_2[i])[0] for i in range(len(t))]
