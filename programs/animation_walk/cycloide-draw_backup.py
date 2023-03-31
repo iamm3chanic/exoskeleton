@@ -1,4 +1,5 @@
-from numpy import sin, cos, sqrt, arctan
+from math import sqrt
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -72,7 +73,7 @@ def graph_draw(title, x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, filename, legend=[
 if __name__ == "__main__":
     print("start")
     # угол наклона корпуса 2-периодичный зададим вручную
-    psi = np.radians(-4.3 + 2.7 * sin(2 * omega * t) - 1.5 * cos(2 * omega * t))
+    psi = np.radians(-4.3 + 2.7 * np.sin(2 * omega * t) - 1.5 * np.cos(2 * omega * t))
     # таз
     x0 = np.linspace(0, 7, len(t))
     y0 = np.ones(len(t)) * h
@@ -94,8 +95,8 @@ if __name__ == "__main__":
     y2_1 = [find_knee(x0[i], y0[i], x2_2[i], y2_2[i])[1] for i in range(len(t))]
     """
     # голова
-    x3 = x0 - L3 * sin(psi)
-    y3 = y0 + L3 * cos(psi)
+    x3 = x0 - L3 * np.sin(psi)
+    y3 = y0 + L3 * np.cos(psi)
 
     graph_draw("Траектории точек экзоскелета", x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, "tracks.png",
                legend=['таз', 'колено', 'пятка', 'голова'])
