@@ -83,12 +83,12 @@ finally:
 
 
 # построение графика всех параметров от времени на одном графике
-def graph_draw(title, t, data, filename, ylabel='angles',
+def graph_draw(title, t, data, filename, ylabel='angles, Рад',
                legend=None):
     if legend is None:
         legend = ['alpha1', 'alpha2', 'beta1', 'beta2', 'psi']
     plt.title(title)
-    plt.xlabel("t")
+    plt.xlabel("t, с")
     plt.ylabel(ylabel)
     plt.grid()
     for d in data:
@@ -100,13 +100,17 @@ def graph_draw(title, t, data, filename, ylabel='angles',
 
 
 if __name__ == "__main__":
-    graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles',
+    graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles, Рад',
                legend=['alpha1', 'alpha2', 'beta1', 'beta2', 'psi'])
-    graph_draw("Обобщенные силы", t, [Qa1, Qa2, Qb1, Qb2, Qpsi], "forces.png", ylabel='forces',
-               legend=['Qalpha1', 'Qalpha2', 'Qbeta1', 'Qbeta2', 'psi'])
-    graph_draw("Моменты", t, [u1, u2, q1, q2], "moments.png", ylabel='moments',
-               legend=['u1', 'u2', 'q1', 'q2'])
-    graph_draw("Реакции", t, [R1_hor, R1_ver, R1x, R1y], "reactions.png", ylabel='reactions',
+    graph_draw("Обобщенные силы", t, [Qa1, Qa2, Qb1, Qb2, Qpsi], "forces.png", ylabel='forces, Н*м',
+               legend=['Qalpha1', 'Qalpha2', 'Qbeta1', 'Qbeta2', 'Qpsi'])
+    graph_draw("Моменты", t, [u1, u2, q1, q2], "moments.png", ylabel='moments, Н*м',
+               legend=['М12', 'М22', 'М13', 'М23'])
+    graph_draw("Моменты в коленных суставах", t, [u1, u2], "moments_knee.png", ylabel='moments, Н*м',
+            legend=['М12', 'М22'])
+    graph_draw("Моменты в тазобедренном суставе", t, [q1, q2], "moments_corpus.png", ylabel='moments, Н*м',
+               legend=['М13', 'М23'])
+    graph_draw("Реакции", t, [R1_hor, R1_ver, R1x, R1y], "reactions.png", ylabel='reactions, Н',
                legend=['R1x статическая', 'R1y статическая', 'R1x динамическая', 'R1y динамическая'])
     graph_draw("Момент в коленном суставе и разность углов", t, [u1, Mom12], "moment_angle.png", ylabel='moment+angle',
                legend=['u1', 'Omega1*R1y'])
