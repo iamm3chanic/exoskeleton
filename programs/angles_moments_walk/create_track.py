@@ -49,6 +49,12 @@ def deriv2(arr, delta=dt):
     return res
 
 
+def norm_list(x):
+    m = max([abs(elem) for elem in x])
+    res = [elem / m for elem in x]
+    return res
+
+
 # поиск колена по координатам пятки и таза
 def find_knee(x1, y1, x2, y2):
     # ищем точки пересечения двух окружностей 
@@ -208,6 +214,23 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
     return R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x
 
 
+def energy_estimations(alpha1, beta1, M12, R1y):
+    Omega1 = - np.array(alpha1) + np.array(beta1)
+    dOmega1 = deriv1(- np.array(alpha1) + np.array(beta1))
+    est1 = [M12[i] * dOmega1[i] for i in range(len(dOmega1))]
+    est2 = [M12[i] * M12[i] * dOmega1[i] for i in range(len(dOmega1))]
+    int1, int2 = 0, 0
+    for i in range(len(est1)):
+        int1 += est1[i] * dt
+        int2 += est2[i] * dt
+    print("integral1 =", int1, "; integral2 =", int2)
+    # take a norm
+    est1 = norm_list(est1)
+    est2 = norm_list(est2)
+    est3 = [Omega1[i] * R1y[i] for i in range(len(Omega1))]
+    return est1, est2, est3
+
+
 def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
     # реакции и момент в стопе переносной ноги
     R2x, R2y, M21 = np.zeros(len(alpha1)), np.zeros(len(alpha1)), np.zeros(len(alpha1))
@@ -241,9 +264,7 @@ def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
         m23[(i * 22):(i * 22) + 11] = M23[:11]
         m23[(i * 22 + 11):(i * 22) + 22] = M13[:11]
 
-
     return M11, M21, m12, m22, m13, m23
-
 
 
 if __name__ == "__main__":
@@ -290,7 +311,8 @@ if __name__ == "__main__":
         -127 - 85 * sin(omega * t) + 70 * cos(omega * t) + 50 * sin(2 * omega * t) - 31 * cos(2 * omega * t))"""
     print("counting reactions...")
     R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x = count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy)
-
+    print("energy estimating...")
+    est1, est2, est3 = energy_estimations(alpha1, beta1, u1, R1y)
     # запись в файл
     f = open('track_energy_react.txt', 'w')
     try:
@@ -300,7 +322,8 @@ if __name__ == "__main__":
         # Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2
         # R1_ver, R1_hor, R2_ver, R2_hor
         # u1, u2, q1, q2,
-        # R1x, R1y, R2x, R2y")
+        # R1x, R1y, R2x, R2y
+        # est1, est2")
         for i in range(len(t)):
             print("%.2f " % round(t[i], 2),
                   "%.2f " % round(x0[i], 2), "%.2f " % round(y0[i], 2),
@@ -323,6 +346,7 @@ if __name__ == "__main__":
                   "%.2f " % round(q1[i], 2), "%.2f " % round(q2[i], 2),
                   "%.2f " % round(R1x[i], 2), "%.2f " % round(R1y[i], 2),
                   "%.2f " % round(R2x[i], 2), "%.2f " % round(R2y[i], 2),
+                  "%.2f " % round(est1[i], 2), "%.2f " % round(est2[i], 2),
                   file=f)
     finally:
         f.close()
