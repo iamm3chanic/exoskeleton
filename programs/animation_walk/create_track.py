@@ -104,7 +104,7 @@ if __name__ == "__main__":
     # угол наклона корпуса 2-периодичный зададим вручную
     psi = np.radians(-4.3 + 2.7 * sin(2 * omega * t) - 1.5 * cos(2 * omega * t))
     # таз
-    x0 = np.linspace(0, 7, len(t))
+    x0 = np.linspace(0, 7.7, len(t))
     y0 = np.ones(len(t)) * h
     # пятка 1
     # x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
