@@ -183,7 +183,14 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
     R1x = np.zeros(len(t))
     R2y = np.zeros(len(t))
     R2x = np.zeros(len(t))
-    for i in range(len(t)):
+    for i in range(6):
+        R1_ver[(i * 22):(i * 22) + 11] = G * (2 * M1 * cos(alpha1[(i * 22):(i * 22) + 11]) + 2 * M2 * cos(
+            beta1[(i * 22):(i * 22) + 11]) + M3 * cos(psi[(i * 22):(i * 22) + 11]))
+        R1_hor[(i * 22):(i * 22) + 11] = G * (2 * M1 * sin(alpha1[(i * 22):(i * 22) + 11]) + 2 * M2 * sin(
+            beta1[(i * 22):(i * 22) + 11]) + M3 * sin(psi[(i * 22):(i * 22) + 11]))
+        R1x[(i * 22):(i * 22) + 11] = Qx[(i * 22):(i * 22) + 11]
+        R1y[(i * 22):(i * 22) + 11] = Qy[(i * 22):(i * 22) + 11]
+    """for i in range(len(t)):
         # когда пятка1 стоит на земле
         if y1_2[i] < 0.01:
             R1_ver[i] = G * (2 * M1 * cos(alpha1[i]) + 2 * M2 * cos(beta1[i]) + M3 * cos(psi[i]))
@@ -197,25 +204,46 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
             R2_hor[i] = G * (2 * M1 * sin(alpha2[i]) + 2 * M2 * sin(beta2[i]) + M3 * sin(psi[i]))
             R2x[i] = Qx[i]
             R2y[i] = Qy[i]
-            # print("R2 =", R2_ver[i], R2_hor[i])
+            # print("R2 =", R2_ver[i], R2_hor[i])"""
     return R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x
 
 
 def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
-    R2x, R2y, M21 = 0, 0, 0
+    # реакции и момент в стопе переносной ноги
+    R2x, R2y, M21 = np.zeros(len(alpha1)), np.zeros(len(alpha1)), np.zeros(len(alpha1))
+    # реакции и момент в стопе опорной ноги
     R1x, R1y = Qx, Qy
-    # Qa1 + Qb1
+    # из ур-я Qa1 + Qb1
     # M13plusM23 = -Qpsi
     M13minusM11 = -(Qa1 + Qb1) + L1 * (R1x * cos(alpha1) + R1y * sin(alpha1)) + L2 * (
-                R1x * cos(beta1) + R1y * sin(beta1))
+            R1x * cos(beta1) + R1y * sin(beta1))
     # M23minusM21 = -(Qa2 + Qb2)
+    # пер корпус
     M23 = -(Qa2 + Qb2)
+    # оп корпус
     M13 = -Qpsi - M23
+    # оп стопа
     M11 = M13 - M13minusM11
+    # оп колено
     M12 = -M11 + Qb1 - L2 * (R1x * cos(beta1) + R1y * sin(beta1))
+    # пер колено
     M22 = -M21 + Qb2
 
-    return M11, M21, M12, M22, M13, M23
+    # сделать по полпериода
+    m12, m22, m13, m23 = M12, M22, M13, M23
+    for i in range(6):
+        m12[(i * 22):(i * 22) + 11] = M12[:11]
+        m12[(i * 22 + 11):(i * 22) + 22] = M22[:11]
+        m22[(i * 22):(i * 22) + 11] = M22[:11]
+        m22[(i * 22 + 11):(i * 22) + 22] = M12[:11]
+        m13[(i * 22):(i * 22) + 11] = M13[:11]
+        m13[(i * 22 + 11):(i * 22) + 22] = M23[:11]
+        m23[(i * 22):(i * 22) + 11] = M23[:11]
+        m23[(i * 22 + 11):(i * 22) + 22] = M13[:11]
+
+
+    return M11, M21, m12, m22, m13, m23
+
 
 
 if __name__ == "__main__":
