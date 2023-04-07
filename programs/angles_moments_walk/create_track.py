@@ -217,17 +217,19 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
 def energy_estimations(alpha1, beta1, M12, R1y):
     Omega1 = - np.array(alpha1) + np.array(beta1)
     dOmega1 = deriv1(- np.array(alpha1) + np.array(beta1))
-    est1 = [M12[i] * dOmega1[i] for i in range(len(dOmega1))]
-    est2 = [M12[i] * M12[i] * dOmega1[i] for i in range(len(dOmega1))]
-    int1, int2 = 0, 0
+    est1 = [abs(M12[i] * dOmega1[i]) for i in range(len(dOmega1))]
+    est2 = [abs(M12[i] * M12[i] * dOmega1[i]) for i in range(len(dOmega1))]
+    est3 = [abs(Omega1[i] * R1y[i] * dOmega1[i]) for i in range(len(Omega1))]
+    int1, int2, int3 = 0, 0, 0
     for i in range(len(est1)):
         int1 += est1[i] * dt
         int2 += est2[i] * dt
-    print("integral1 =", int1, "; integral2 =", int2)
+        int3 += est3[i] * dt
+    print("integral1 =", int1, "integral2 =", int2, "integral3 =", int3, end='\n')
     # take a norm
     est1 = norm_list(est1)
     est2 = norm_list(est2)
-    est3 = [Omega1[i] * R1y[i] for i in range(len(Omega1))]
+    est3 = norm_list(est3)
     return est1, est2, est3
 
 
@@ -323,7 +325,7 @@ if __name__ == "__main__":
         # R1_ver, R1_hor, R2_ver, R2_hor
         # u1, u2, q1, q2,
         # R1x, R1y, R2x, R2y
-        # est1, est2")
+        # est1, est2, est3")
         for i in range(len(t)):
             print("%.2f " % round(t[i], 2),
                   "%.2f " % round(x0[i], 2), "%.2f " % round(y0[i], 2),
@@ -347,6 +349,7 @@ if __name__ == "__main__":
                   "%.2f " % round(R1x[i], 2), "%.2f " % round(R1y[i], 2),
                   "%.2f " % round(R2x[i], 2), "%.2f " % round(R2y[i], 2),
                   "%.2f " % round(est1[i], 2), "%.2f " % round(est2[i], 2),
+                  "%.2f " % round(est3[i], 2),
                   file=f)
     finally:
         f.close()
