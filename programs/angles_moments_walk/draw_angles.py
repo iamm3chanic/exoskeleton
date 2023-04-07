@@ -1,4 +1,5 @@
 from numpy import sin, cos
+from create_track import norm_list
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
@@ -26,6 +27,7 @@ Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2 = [], [], [], [], [], [], []
 R1_ver, R1_hor, R2_ver, R2_hor = [], [], [], []
 u1, u2, q1, q2 = [], [], [], []
 R1x, R1y, R2x, R2y = [], [], [], []
+est1, est2, est3 = [], [], []
 Mom12, Mom22 = [], []
 Omega1, Omega2 = [], []
 f = open('track_energy_react.txt', 'r')
@@ -72,8 +74,11 @@ try:
         q2.append(float(string[33]))
         R1x.append(float(string[34]))
         R1y.append(float(string[35]))
-        R2x.append(float(string[34]))
-        R2y.append(float(string[35]))
+        R2x.append(float(string[36]))
+        R2y.append(float(string[37]))
+        est1.append(float(string[38]))
+        est2.append(float(string[39]))
+        est3.append(float(string[40]))
         Omega1.append(np.pi - alpha1[i] + beta1[i])
         Omega2.append((np.pi - alpha2[i] + beta2[i]) * 180 / np.pi)
         Mom12.append(Omega1[i] * R1y[i])
@@ -101,18 +106,22 @@ def graph_draw(title, t, data, filename, ylabel='angles, Рад',
 
 if __name__ == "__main__":
     graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles, Рад',
-               legend=['alpha1', 'alpha2', 'beta1', 'beta2', 'psi'])
+               legend=[r'$\alpha_1$', r'$\alpha_2$', r'$\beta_1$',r'$\beta_2$', r'$\psi$'])
     graph_draw("Обобщенные силы", t, [Qa1, Qa2, Qb1, Qb2, Qpsi], "forces.png", ylabel='forces, Н*м',
-               legend=['Qalpha1', 'Qalpha2', 'Qbeta1', 'Qbeta2', 'Qpsi'])
+               legend=[r'$Q_{\alpha1}$', r'$Q_{\alpha2}$', r'$Q_{\beta1}$', r'$Q_{\beta2}$', r'$Q_{\psi}$'])
     graph_draw("Моменты", t, [u1, u2, q1, q2], "moments.png", ylabel='moments, Н*м',
-               legend=['М12', 'М22', 'М13', 'М23'])
+               legend=[r'$М_{12}$', r'$М_{22}$', r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Моменты в коленных суставах", t, [u1, u2], "moments_knee.png", ylabel='moments, Н*м',
-            legend=['М12', 'М22'])
+            legend=[r'$М_{12}$', r'$М_{22}$'])
     graph_draw("Моменты в тазобедренном суставе", t, [q1, q2], "moments_corpus.png", ylabel='moments, Н*м',
-               legend=['М13', 'М23'])
+               legend=[r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Реакции", t, [R1_hor, R1_ver, R1x, R1y], "reactions.png", ylabel='reactions, Н',
-               legend=['R1x статическая', 'R1y статическая', 'R1x динамическая', 'R1y динамическая'])
-    graph_draw("Момент в коленном суставе и разность углов", t, [u1, Mom12], "moment_angle.png", ylabel='moment+angle',
-               legend=['u1', 'Omega1*R1y'])
-    graph_draw("Момент в коленном суставе и разность углов", t, [u1, Mom22], "Qy_angle.png", ylabel='moment+angle',
-               legend=['u1', 'Omega1*Qy'])
+               legend=[r'$R_{1x}$ статическая', r'$R_{1y}$ статическая', r'$R_{1x}$ динамическая', r'$R_{1y}$ динамическая'])
+    graph_draw("Момент в коленном суставе, реакция и разность углов", t, [u1, Mom12], "moment_angle.png", ylabel='moment+angle',
+               legend=[r'$u_1$', r'$\Omega_1 R_{1y}$'])
+    graph_draw("Момент в коленном суставе, Qy и разность углов", t, [u1, Mom22], "Qy_angle.png", ylabel='moment+angle',
+               legend=[r'$u_1$', r'$\Omega_1 Q_y$'])
+    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est2], "estimations1.png", ylabel='estimations, Н*м/с',
+               legend=[r"$M_{real} \Omega$', 424.3", r"$M_{real}^2 \Omega$', 3.53e5"])
+    graph_draw("Энергетические оценки, реакция и разность углов", t, [est1, est3], "estimations2.png",
+               ylabel='estimations', legend=[r"$M_{real} \Omega$', 424.3", r"$\Omega$ $R_{1y}$ $\Omega$', 909.0"])
