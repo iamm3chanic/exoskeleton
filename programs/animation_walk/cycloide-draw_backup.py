@@ -78,6 +78,7 @@ if __name__ == "__main__":
     x0 = np.linspace(0, 7, len(t))
     y0 = np.ones(len(t)) * h
     # пятка 1
+    # jigsaw: x1_2 = t + L_step / np.pi / 2 * (- np.sin(omega * t*2))
     x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
     y1_2 = L_step * 0.1 * (1 - np.cos(omega * t))
 

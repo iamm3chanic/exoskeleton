@@ -83,14 +83,15 @@ if __name__ == "__main__":
     period = np.arange(0, 1.1, dt)
     half = np.arange(0, 0.55, dt)
     x1_2p = np.copy(period)  # period - L_step /2 * np.sin(omega * period)
-    x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / np.pi * np.sin(omega * half)
+    x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / np.pi * np.sin(omega * half*2)
     x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
+    bgn = x1_2p[0]
     x1_2 = np.copy(x0)
     for i in range(7):
-        x1_2[i * 22: (i + 1) * 22] = x1_2p + np.ones(22) * (x0[i * 22] - L_step / 2)
+        x1_2[i * 22: (i + 1) * 22] = x1_2p + np.ones(22) * (x0[i * 22] - bgn)
 
     y1_2p =np.zeros(len(period))
-    y1_2p[:] = Ampl * (1 - np.cos(omega * period*2))
+    y1_2p[:len(x1_2p) // 2] = Ampl * (1 - np.cos(omega * half*2))
     y1_2p[len(x1_2p) // 2:] = 0
     y1_2 = np.copy(x0)
     for i in range(7):
