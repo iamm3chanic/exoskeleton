@@ -106,22 +106,28 @@ def graph_draw(title, t, data, filename, ylabel='angles, Рад',
 
 if __name__ == "__main__":
     graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles, Рад',
-               legend=[r'$\alpha_1$', r'$\alpha_2$', r'$\beta_1$',r'$\beta_2$', r'$\psi$'])
+               legend=[r'$\alpha_1$', r'$\alpha_2$', r'$\beta_1$', r'$\beta_2$', r'$\psi$'])
     graph_draw("Обобщенные силы", t, [Qa1, Qa2, Qb1, Qb2, Qpsi], "forces.png", ylabel='forces, Н*м',
                legend=[r'$Q_{\alpha1}$', r'$Q_{\alpha2}$', r'$Q_{\beta1}$', r'$Q_{\beta2}$', r'$Q_{\psi}$'])
     graph_draw("Моменты", t, [u1, u2, q1, q2], "moments.png", ylabel='moments, Н*м',
                legend=[r'$М_{12}$', r'$М_{22}$', r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Моменты в коленных суставах", t, [u1, u2], "moments_knee.png", ylabel='moments, Н*м',
-            legend=[r'$М_{12}$', r'$М_{22}$'])
+               legend=[r'$М_{12}$', r'$М_{22}$'])
     graph_draw("Моменты в тазобедренном суставе", t, [q1, q2], "moments_corpus.png", ylabel='moments, Н*м',
                legend=[r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Реакции", t, [R1_hor, R1_ver, R1x, R1y], "reactions.png", ylabel='reactions, Н',
-               legend=[r'$R_{1x}$ статическая', r'$R_{1y}$ статическая', r'$R_{1x}$ динамическая', r'$R_{1y}$ динамическая'])
-    graph_draw("Момент в коленном суставе, реакция и разность углов", t, [u1, Mom12], "moment_angle.png", ylabel='moment+angle',
+               legend=[r'$R_{1x}$ статическая', r'$R_{1y}$ статическая', r'$R_{1x}$ динамическая',
+                       r'$R_{1y}$ динамическая'])
+    graph_draw("Момент в коленном суставе, реакция и разность углов", t, [u1, Mom12], "moment_angle.png",
+               ylabel='moment+angle',
                legend=[r'$u_1$', r'$\Omega_1 R_{1y}$'])
     graph_draw("Момент в коленном суставе, Qy и разность углов", t, [u1, Mom22], "Qy_angle.png", ylabel='moment+angle',
                legend=[r'$u_1$', r'$\Omega_1 Q_y$'])
-    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est2], "estimations1.png", ylabel='estimations, Н*м/с',
+    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est2], "estimations1.png",
+               ylabel='estimations, Н*м/с',
                legend=[r"$M_{real} \Omega$', 424.3", r"$M_{real}^2 \Omega$', 3.53e5"])
     graph_draw("Энергетические оценки, реакция и разность углов", t, [est1, est3], "estimations2.png",
                ylabel='estimations', legend=[r"$M_{real} \Omega$', 424.3", r"$\Omega$ $R_{1y}$ $\Omega$', 909.0"])
+    graph_draw("Шаг (теор): угол и сила реакции от времени", t, [[i * 180 / 3.14 for i in Omega1], R1y],
+               "theor_step.png",
+               ylabel=r"$\Omega, °$, $R_{y}, H$", legend=[r"$\Omega$", r"$R_{y}$"])
