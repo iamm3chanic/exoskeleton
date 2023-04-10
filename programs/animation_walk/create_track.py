@@ -180,7 +180,7 @@ def count_common_Q(x0, y0, alpha1, beta1, alpha2, beta2, psi):
 
 
 # реакции опоры (статика)
-def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
+def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy, type_=1):
     R1_ver = np.zeros(len(t))
     R1_hor = np.zeros(len(t))
     R2_ver = np.zeros(len(t))
@@ -189,6 +189,10 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
     R1x = np.zeros(len(t))
     R2y = np.zeros(len(t))
     R2x = np.zeros(len(t))
+    if type_ == 1 or type_ == 2:
+        limit = 0.00001
+    elif type_ == 3:
+        limit = 0.01
     """for i in range(6):
         R1_ver[(i * 22):(i * 22) + 11] = G * (2 * M1 * cos(alpha1[(i * 22):(i * 22) + 11]) + 2 * M2 * cos(
             beta1[(i * 22):(i * 22) + 11]) + M3 * cos(psi[(i * 22):(i * 22) + 11]))
@@ -204,14 +208,14 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
         R2y[(i * 22) + 11:(i * 22) + 22] = Qy[(i * 22):(i * 22) + 11]"""
     for i in range(len(t)):
         # когда пятка1 стоит на земле
-        if y1_2[i] == 0.:  # < 0.01:
+        if y1_2[i] <= limit:  # < 0.01:
             R1_ver[i] = G * (2 * M1 * cos(alpha1[i]) + 2 * M2 * cos(beta1[i]) + M3 * cos(psi[i]))
             R1_hor[i] = G * (2 * M1 * sin(alpha1[i]) + 2 * M2 * sin(beta1[i]) + M3 * sin(psi[i]))
             R1x[i] = Qx[i]
             R1y[i] = Qy[i]
             # print("R1 =", R1_ver[i], R1_hor[i])
         # когда пятка2 стоит на земле
-        if y2_2[i] == 0.:  # < 0.01:
+        if y2_2[i] <= limit:  # < 0.01:
             R2_ver[i] = G * (2 * M1 * cos(alpha2[i]) + 2 * M2 * cos(beta2[i]) + M3 * cos(psi[i]))
             R2_hor[i] = G * (2 * M1 * sin(alpha2[i]) + 2 * M2 * sin(beta2[i]) + M3 * sin(psi[i]))
             R2x[i] = Qx[i]
@@ -276,6 +280,84 @@ def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
     return M11, M21, m12, m22, m13, m23
 
 
+def movement_configurations(type_=1):
+    # 1 - walk, 2 - fast walk, 3 - run
+    x1_2, y1_2, x2_2, y2_2 = [], [], [], []
+    x0 = np.linspace(0, 7.7, len(t))
+    T = 1.1  # период двойного шага
+    omega = 2 * 3.14 / T
+    if type_ == 1:
+        # пятка 1
+        period = np.arange(0, 1.1, dt)
+        half = np.arange(0, 0.55, dt)
+        x1_2p = np.copy(period)
+        x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
+        x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
+        x1_2 = np.copy(x0)
+        for i in range(7):
+            x1_2[i * 22: (i + 1) * 22] = x1_2p + np.ones(22) * (x0[i * 22] - L_step / 2)
+        y1_2p = np.zeros(len(period))
+        y1_2p[:len(x1_2p) // 2] = Ampl * (1 - np.cos(omega * half * 2))
+        y1_2p[len(x1_2p) // 2:] = 0
+        y1_2 = np.zeros(len(t))
+        for i in range(7):
+            y1_2[i * 22: (i + 1) * 22] = y1_2p
+        # пятка 2
+        x2_2p = np.copy(period)
+        x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
+        x2_2p[:len(x2_2p) // 2] = x2_2p[0]
+        x2_2 = np.copy(x0)
+        for i in range(7):
+            x2_2[i * 22: (i + 1) * 22] = x2_2p + np.ones(22) * (x0[i * 22] + L_step / 2)
+        y2_2p = np.zeros(len(period))
+        y2_2p[len(x1_2p) // 2:] = Ampl * (1 - np.cos(omega * half * 2))
+        y2_2p[:len(x1_2p) // 2] = 0
+        y2_2 = np.zeros(len(t))
+        for i in range(7):
+            y2_2[i * 22: (i + 1) * 22] = y2_2p
+    elif type_ == 2:
+        T = 0.7  # период двойного шага
+        omega = 2 * 3.14 / T
+        # пятка 1
+        period = np.arange(0, 0.7, dt)
+        half = np.arange(0, 0.35, dt)
+        n_dots = 14
+        x1_2p = np.copy(period)
+        x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
+        x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
+        x1_2 = np.copy(x0)
+        for i in range(11):
+            x1_2[i * n_dots: (i + 1) * n_dots] = x1_2p + np.ones(n_dots) * (x0[i * n_dots] - L_step / 2)
+        y1_2p = np.zeros(len(period))
+        y1_2p[:len(x1_2p) // 2] = Ampl * (1 - np.cos(omega * half * 2))
+        y1_2p[len(x1_2p) // 2:] = 0
+        y1_2 = np.zeros(len(t))
+        for i in range(11):
+            y1_2[i * n_dots: (i + 1) * n_dots] = y1_2p
+        # пятка 2
+        x2_2p = np.copy(period)
+        x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
+        x2_2p[:len(x2_2p) // 2] = x2_2p[0]
+        x2_2 = np.copy(x0)
+        for i in range(11):
+            x2_2[i * n_dots: (i + 1) * n_dots] = x2_2p + np.ones(n_dots) * (x0[i * n_dots] + L_step / 2)
+        y2_2p = np.zeros(len(period))
+        y2_2p[len(x1_2p) // 2:] = Ampl * (1 - np.cos(omega * half * 2))
+        y2_2p[:len(x1_2p) // 2] = 0
+        y2_2 = np.zeros(len(t))
+        for i in range(11):
+            y2_2[i * n_dots: (i + 1) * n_dots] = y2_2p
+    elif type_ == 3:
+        # пятка 1
+        x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
+        y1_2 = L_step * 0.1 * (1 - np.cos(omega * t))
+        # пятка 2
+        x2_2 = t + L_step / np.pi * (- np.sin(omega * t - np.pi))
+        y2_2 = L_step * 0.1 * (1 - np.cos(omega * t - np.pi))
+
+    return x1_2, y1_2, x2_2, y2_2
+
+
 if __name__ == "__main__":
     print("start")
     # угол наклона корпуса 2-периодичный зададим вручную
@@ -283,47 +365,15 @@ if __name__ == "__main__":
     # таз
     x0 = np.linspace(0, 7.7, len(t))
     y0 = np.ones(len(t)) * h
-    # пятка 1
-    # x1_2 = t + L_step / np.pi * (- np.sin(omega * t))
-    # y1_2 = Ampl * (1 - np.cos(omega * t))
-    period = np.arange(0, 1.1, dt)
-    half = np.arange(0, 0.55, dt)
-    x1_2p = np.copy(period)  # period - L_step /2 * np.sin(omega * period)
-    x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
-    # x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / np.pi * np.sin(omega * half)
-    x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
-    x1_2 = np.copy(x0)
-    for i in range(7):
-        x1_2[i * 22: (i + 1) * 22] = x1_2p + np.ones(22) * (x0[i * 22] - L_step / 2)  # -np.ones(22)*0.2
-
-    y1_2p = np.zeros(len(period))
-    y1_2p[:len(x1_2p) // 2] = Ampl * (1 - np.cos(omega * half * 2))
-    y1_2p[len(x1_2p) // 2:] = 0
-    y1_2 = np.zeros(len(t))
-    for i in range(7):
-        y1_2[i * 22: (i + 1) * 22] = y1_2p
-
+    # 1 - walk, 2 - fast walk, 3 - run
+    type_ = 3
+    x1_2, y1_2, x2_2, y2_2 = movement_configurations(type_)
+    # пятка 1: x1_2 , y1_2
     # колено 1
     print("finding coordinates of knee1...")
     x1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[0] for i in range(len(t))]
     y1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[1] for i in range(len(t))]
-    # пятка 2
-    # x2_2 = t + L_step / np.pi * (- np.sin(omega * t - np.pi))
-    x2_2p = np.copy(period)  # -L_step / 2 * np.sin(omega * period - np.pi)
-
-    # x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / np.pi * np.sin(omega * half)
-    x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
-    x2_2p[:len(x2_2p) // 2] = x2_2p[0]
-    x2_2 = np.copy(x0)
-    for i in range(7):
-        x2_2[i * 22: (i + 1) * 22] = x2_2p + np.ones(22) * (x0[i * 22] + L_step / 2)
-    # y2_2 = Ampl * (1 - np.cos(omega * t - np.pi))
-    y2_2p = np.zeros(len(period))
-    y2_2p[len(x1_2p) // 2:] = Ampl * (1 - np.cos(omega * half * 2))
-    y2_2p[:len(x1_2p) // 2] = 0
-    y2_2 = np.zeros(len(t))
-    for i in range(7):
-        y2_2[i * 22: (i + 1) * 22] = y2_2p
+    # пятка 2: x2_2 , y2_2
     # колено 2
     print("finding coordinates of knee2...")
     x2_1 = [find_knee(x0[i], y0[i], x2_2[i], y2_2[i])[0] for i in range(len(t))]
@@ -346,11 +396,19 @@ if __name__ == "__main__":
     # M11, M21, M12, M22, M13, M23 = w1, w2, u1, u2, q1, q2
     w1, w2, u1, u2, q1, q2 = find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2)
     print("counting reactions...")
-    R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x = count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy)
+    R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x = count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy,
+                                                                         type_=type_)
     print("energy estimating...")
     est1, est2, est3 = energy_estimations(alpha1, beta1, u1, R1y)
     # запись в файл
-    f = open('track_energy_react.txt', 'w')
+    # запись в файл
+    if type_ == 1:
+        filename = 'track_walk.txt'
+    elif type_ == 2:
+        filename = 'track_fast_walk.txt'
+    elif type_ == 3:
+        filename = 'track_run.txt'
+    f = open(filename, 'w')
     try:
         # f.write ("t x0 y0 x1_1 y1_1 x1_2 y1_2 x2_1 y2_1 x2_2 y2_2 x3 y3
         # alpha1 beta1 alpha2 beta2 psi energy_p
