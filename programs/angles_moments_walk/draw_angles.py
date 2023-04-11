@@ -113,7 +113,7 @@ if __name__ == "__main__":
                legend=[r'$М_{12}$', r'$М_{22}$', r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Моменты в коленных суставах", t, [u1, u2], "moments_knee.png", ylabel='moments, Н*м',
                legend=[r'$М_{12}$', r'$М_{22}$'])
-    graph_draw("Моменты в тазобедренном суставе", t, [q1, q2], "moments_corpus.png", ylabel='moments, Н*м',
+    graph_draw("Моменты в тазобедренных суставах", t, [q1, q2], "moments_corpus.png", ylabel='moments, Н*м',
                legend=[r'$М_{13}$', r'$М_{23}$'])
     graph_draw("Реакции", t, [R1_hor, R1_ver, R1x, R1y], "reactions.png", ylabel='reactions, Н',
                legend=[r'$R_{1x}$ статическая', r'$R_{1y}$ статическая', r'$R_{1x}$ динамическая',
