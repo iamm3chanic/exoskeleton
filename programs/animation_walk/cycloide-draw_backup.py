@@ -56,10 +56,10 @@ def find_knee(x1, y1, x2, y2):
 
 
 # построение графика всех параметров от времени на одном графике
-def graph_draw(title, x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, filename, legend=['Голова', 'Колено1', 'Колено2', 'Таз']):
+def graph_draw(title, x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, filename, legend=['Голова', 'Колено1', 'Колено2', 'Таз'], xlabel='x, м', ylabel='heights, м'):
     plt.title(title)
-    plt.xlabel("t")
-    plt.ylabel("dots")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
     plt.grid()
     plt.plot(x0, y0)
     plt.plot(x1_1, y1_1)
@@ -99,6 +99,8 @@ if __name__ == "__main__":
     x3 = x0 - L3 * np.sin(psi)
     y3 = y0 + L3 * np.cos(psi)
 
-    graph_draw("Траектории точек экзоскелета", x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, "tracks.png",
+    graph_draw("Траектории точек экзоскелета", x0, y0, x1_1, y1_1, x1_2, y1_2, x3, y3, "tracks_run.png",
                legend=['таз', 'колено', 'пятка', 'голова'])
+    graph_draw("Высоты точек экзоскелета", t, y0, t, y1_1, t, y1_2, t, y3, "heights_run.png",
+               legend=['таз', 'колено', 'пятка', 'голова'], xlabel='t, с')
     print("end")
