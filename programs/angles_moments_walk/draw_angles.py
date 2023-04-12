@@ -27,11 +27,26 @@ Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2 = [], [], [], [], [], [], []
 R1_ver, R1_hor, R2_ver, R2_hor = [], [], [], []
 u1, u2, q1, q2 = [], [], [], []
 R1x, R1y, R2x, R2y = [], [], [], []
-est1, est2, est3 = [], [], []
+est1, est2, est3, est4 = [], [], [], []
 Mom12, Mom22 = [], []
 Omega1, Omega2 = [], []
-f = open('track_energy_react.txt', 'r')
 
+type_ = 3
+filename = 'track_energy_react.txt'
+if type_ == 1:
+    filename = 'track_walk.txt'
+    est_file = 'est_walk.txt'
+    gif = 'walk.gif'
+elif type_ == 2:
+    filename = 'track_fast_walk.txt'
+    est_file = 'est_fast_walk.txt'
+    gif = 'fast_walk.gif'
+elif type_ == 3:
+    filename = 'track_run.txt'
+    est_file = 'est_run.txt'
+    gif = 'run.gif'
+
+f = open(filename, 'r')
 try:
     # работа с файлом
     text = f.readlines()
@@ -79,12 +94,24 @@ try:
         est1.append(float(string[38]))
         est2.append(float(string[39]))
         est3.append(float(string[40]))
+        est4.append(float(string[41]))
         Omega1.append(np.pi - alpha1[i] + beta1[i])
         Omega2.append((np.pi - alpha2[i] + beta2[i]) * 180 / np.pi)
         Mom12.append(Omega1[i] * R1y[i])
         Mom22.append(Omega1[i] * Qy[i])
 finally:
     f.close()
+
+f_est = open(est_file, 'r')
+int1, int2, int3, int4 = 0, 0, 0, 0
+try:
+    text = f_est.readlines()
+    int1 = float(text[0])
+    int2 = float(text[1])
+    int3 = float(text[2])
+    int4 = float(text[3])
+finally:
+    f_est.close()
 
 
 # построение графика всех параметров от времени на одном графике
@@ -120,14 +147,19 @@ if __name__ == "__main__":
                        r'$R_{1y}$ динамическая'])
     graph_draw("Момент в коленном суставе, реакция и разность углов", t, [u1, Mom12], "moment_angle.png",
                ylabel='moment+angle',
-               legend=[r'$u_1$', r'$\Omega_1 R_{1y}$'])
-    graph_draw("Момент в коленном суставе, Qy и разность углов", t, [u1, Mom22], "Qy_angle.png", ylabel='moment+angle',
-               legend=[r'$u_1$', r'$\Omega_1 Q_y$'])
+               legend=[r'$M_{12}$', r'$\Omega_1 R_{1y}$'])
+    graph_draw(r"Момент в коленном суставе, $Q_y$ и разность углов", t, [u1, Mom22], "Qy_angle.png",
+               ylabel='moment+angle',
+               legend=[r'$M_{12}$', r'$\Omega_1 Q_y$'])
     graph_draw("Энергетические оценки для одного шарнира", t, [est1, est2], "estimations1.png",
                ylabel='estimations, Н*м/с',
-               legend=[r"$M_{real} \Omega$', 424.3", r"$M_{real}^2 \Omega$', 3.53e5"])
+               legend=[r"$M_{real} \Omega$', " + str(int1), r"$M_{real}^2 \Omega$', " + str(int2)])
+    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est4], "estimations3.png",
+               ylabel='estimations, Н*м/с',
+               legend=[r"$M_{real} \Omega$', " + str(int1), r"$M_{real}$, " + str(int4)])
     graph_draw("Энергетические оценки, реакция и разность углов", t, [est1, est3], "estimations2.png",
-               ylabel='estimations', legend=[r"$M_{real} \Omega$', 424.3", r"$\Omega$ $R_{1y}$ $\Omega$', 909.0"])
+               ylabel='estimations',
+               legend=[r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(int3)])
     graph_draw("Шаг (теор): угол и сила реакции от времени", t, [[i * 180 / 3.14 for i in Omega1], R1y],
                "theor_step.png",
                ylabel=r"$\Omega, °$, $R_{y}, H$", legend=[r"$\Omega$", r"$R_{y}$"])
