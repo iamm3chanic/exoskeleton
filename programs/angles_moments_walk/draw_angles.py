@@ -1,4 +1,5 @@
 from numpy import sin, cos
+from scipy.optimize import minimize, rosen, rosen_der
 from create_track import norm_list
 import numpy as np
 import matplotlib.pyplot as plt
@@ -131,7 +132,42 @@ def graph_draw(title, t, data, filename, ylabel='angles, Рад',
     plt.cla()
 
 
+def graph_areas(title, t, data, filename, ylabel='estimations',
+                legend=None):
+    if legend is None:
+        legend = [r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(int3)]
+    plt.title(title)
+    plt.xlabel("t, с")
+    plt.ylabel(ylabel)
+    plt.grid()
+    i = 0
+    for d in data:
+        plt.plot(t, d)
+        plt.fill_between(t, d, label=legend[i], alpha=0.4)
+        i += 1
+    plt.text(.8, .8, 'Coef = 0.421', style='italic',
+            bbox={'facecolor': 'green', 'alpha': 0.5, 'pad': 10})
+    plt.legend()
+    plt.savefig(filename)
+    plt.figure()
+    plt.cla()
+
+
+def find_coef_control(e1, e3):
+    def fun(k):
+        res = 0
+        for i in range(len(e1)):
+            res += (e1[i] - e3[i] * k) * dt
+        return abs(res)
+
+    coef = minimize(fun, 1, method='SLSQP', bounds=[(0, 5)])
+    return coef
+
+
 if __name__ == "__main__":
+    #opt_coef = find_coef_control(est1, est3).x[0]
+    opt_coef = 0.4207763870043699
+    print("OPTIMAL CONTROL COEF:", opt_coef)
     graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles, Рад',
                legend=[r'$\alpha_1$', r'$\alpha_2$', r'$\beta_1$', r'$\beta_2$', r'$\psi$'])
     graph_draw("Обобщенные силы", t, [Qa1, Qa2, Qb1, Qb2, Qpsi], "forces.png", ylabel='forces, Н*м',
@@ -151,15 +187,20 @@ if __name__ == "__main__":
     graph_draw(r"Момент в коленном суставе, $Q_y$ и разность углов", t, [u1, Mom22], "Qy_angle.png",
                ylabel='moment+angle',
                legend=[r'$M_{12}$', r'$\Omega_1 Q_y$'])
-    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est2], "estimations1.png",
+    graph_draw("Энергетические оценки для одного шарнира", t, [norm_list(est1), norm_list(est2)], "estimations1.png",
                ylabel='estimations, Н*м/с',
                legend=[r"$M_{real} \Omega$', " + str(int1), r"$M_{real}^2 \Omega$', " + str(int2)])
-    graph_draw("Энергетические оценки для одного шарнира", t, [est1, est4], "estimations3.png",
+    graph_draw("Энергетические оценки для одного шарнира", t, [norm_list(est1), norm_list(est4)], "estimations3.png",
                ylabel='estimations, Н*м/с',
                legend=[r"$M_{real} \Omega$', " + str(int1), r"$M_{real}$, " + str(int4)])
-    graph_draw("Энергетические оценки, реакция и разность углов", t, [est1, est3], "estimations2.png",
+    graph_draw("Энергетические оценки, реакция и разность углов", t, [norm_list(est1), norm_list(est3)],
+               "estimations2.png",
                ylabel='estimations',
                legend=[r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(int3)])
     graph_draw("Шаг (теор): угол и сила реакции от времени", t, [[i * 180 / 3.14 for i in Omega1], R1y],
                "theor_step.png",
                ylabel=r"$\Omega, °$, $R_{y}, H$", legend=[r"$\Omega$", r"$R_{y}$"])
+    graph_areas("Энергетические оценки с оптимальным коэффициентом усиления", t, [est1, [i * opt_coef for i in est3]],
+                "estimations_opt.png",
+                ylabel='estimations',
+                legend=[r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(round(int3 * opt_coef, 2))])
