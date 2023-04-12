@@ -1,4 +1,5 @@
 from numpy import sin, cos, sqrt, arctan
+from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.integrate as integrate
@@ -51,8 +52,18 @@ def deriv2(arr, delta=dt):
 
 
 def norm_list(x):
-    m = max([abs(elem) for elem in x])
-    res = [elem / m for elem in x]
+    xmin = min(x)
+    xmax = max(x)
+    for i, y in enumerate(x):
+        x[i] = (y - xmin) / (xmax - xmin)
+    return x
+
+
+def norm_list_(x):
+    sc = MinMaxScaler()
+    x = np.array(x).reshape(-1, 1)
+    res = sc.fit_transform(x)
+    res = np.reshape(res, (len(res),))
     return res
 
 
@@ -248,10 +259,10 @@ def energy_estimations(alpha1, beta1, M12, R1y, type_=1):
     finally:
         f.close()
     # take a norm
-    est1 = norm_list(est1)
+    """est1 = norm_list(est1)
     est2 = norm_list(est2)
     est3 = norm_list(est3)
-    est4 = norm_list(est4)
+    est4 = norm_list(est4)"""
     return est1, est2, est3, est4
 
 
