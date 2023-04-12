@@ -251,7 +251,8 @@ def energy_estimations(alpha1, beta1, M12, R1y, type_=1):
     est1 = norm_list(est1)
     est2 = norm_list(est2)
     est3 = norm_list(est3)
-    return est1, est2, est3
+    est4 = norm_list(est4)
+    return est1, est2, est3, est4
 
 
 def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
@@ -376,7 +377,7 @@ if __name__ == "__main__":
     x0 = np.linspace(0, 7, len(t))
     y0 = np.ones(len(t)) * h
     # 1 - walk, 2 - fast walk, 3 - run
-    type_ = 1
+    type_ = 3
     x1_2, y1_2, x2_2, y2_2 = movement_configurations(type_)
     # пятка 1: x1_2 , y1_2
     # колено 1
@@ -407,7 +408,7 @@ if __name__ == "__main__":
     print("counting reactions...")
     R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x = count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy)
     print("energy estimating...")
-    est1, est2, est3 = energy_estimations(alpha1, beta1, u1, R1y, type_=type_)
+    est1, est2, est3, est4 = energy_estimations(alpha1, beta1, u1, R1y, type_=type_)
     # запись в файл
     if type_ == 1:
         filename = 'track_walk.txt'
