@@ -115,6 +115,29 @@ try:
 finally:
     f_est.close()
 
+time, pos_r, pos_l, pres_up_r, pres_up_l, pres_dn_r, pres_dn_l, trq_r, trq_l, type_ = [
+], [], [], [], [], [], [], [], [], []
+f_ = open('data_exp.txt', 'r')
+try:
+    # работа с файлом
+    text = f_.readlines()
+    for item in text:
+        string = item.split()
+        time.append(int(string[0]))
+        pos_r.append(int(string[1]))
+        pos_l.append(int(string[2]))
+        pres_up_r.append(int(string[3]))
+        pres_up_l.append(int(string[4]))
+        pres_dn_r.append(int(string[5]))
+        pres_dn_l.append(int(string[6]))
+        trq_r.append(int(string[7]))
+        trq_l.append(int(string[8]))
+        type_.append(int(string[9]))
+        # str(f.readline(i+1)) #.split()
+        # i+=1
+finally:
+    f_.close()
+
 
 def dtw_pic(array1, array2, filename='dtw_u1_m12.png', ylabel='moment+angle',
             legend=[r'$M_{12}$', r'$\Omega_1 R_{1y}$'], title="Момент в коленном суставе, реакция и разность углов"):
@@ -140,12 +163,111 @@ def dtw_pic(array1, array2, filename='dtw_u1_m12.png', ylabel='moment+angle',
     plt.savefig(filename)
 
 
+# преобразовать массивы, выбрав нужный тип (1..4)
+def pick_type(list_, type_, time, t):
+    l0, t0 = [], []
+    for k in range(0, len(list_)):
+        if type_[k] == t:
+            l0.append(list_[k])
+            t0.append(time[k])
+    return l0, t0
+
+
+#
+def calibrate(list_, koef_d, koef_p):
+    l = []
+    for i in list_:
+        l.append(i / koef_d + koef_p)
+    return l
+
+
+#
+def move_to_axe(arr):
+    s = 0
+    for one in arr:
+        s += one
+    mid = s / len(arr)
+    arr = np.array(arr) - mid
+    return arr
+
+
+# выбирает индексы начала шага, потом поправим их вручную
+def pick_step(pres):
+    # найдем скачок больше -20 по давлению
+    # это означает поднятие ноги
+    step_indices = []
+    for i in range(len(pres) - 1):
+        if pres[i + 1] - pres[i] <= -20 and abs(pres[i + 1] - pres[i]) >= 20:
+            step_indices.append(i + 1)
+    return step_indices
+
+
+def exp_preparations():
+    # выбираем тип 1 - это шаги
+    pos_r_1, t1 = pick_type(pos_r, type_, time, 1)
+    pos_l_1, t1 = pick_type(pos_l, type_, time, 1)
+    pres_dn_r_1, t1 = pick_type(pres_dn_r, type_, time, 1)
+    pres_dn_l_1, t1 = pick_type(pres_dn_l, type_, time, 1)
+    # выбираем индексы, опреденные давлением под правой ногой
+    step_indices = pick_step(pres_dn_r_1)
+    # print(step_indices)
+    steps_arr = []
+    for i in range(len(step_indices) - 1):
+        step = []
+        # если шаг среднего размера - от 19 до 25 позиций по времени
+        if step_indices[i + 1] - step_indices[i] >= 19 and step_indices[i + 1] - step_indices[i] <= 25:
+            for j in range(step_indices[i], step_indices[i + 1]):
+                step.append([pos_r_1[j], pos_l_1[j], pres_dn_r_1[j], pres_dn_l_1[j]])
+            # print('\nstep',i,'=',step)
+            steps_arr.append(step)
+    # возьмем например Kй шаг, правую позицию, калибровочные коэф-ы *17 + 180
+    k = 4
+    # print(steps_arr[k])
+    dr_pos = []
+    dr_pres = []
+    dr_pos_other = []
+    # dr_pres_other = [1011]
+    dr_pres_other = []
+    dr_time = [0]
+    for i in range(len(steps_arr[k])):
+        dr_pos.append(steps_arr[k][i][0])
+        dr_pos_other.append(steps_arr[k][i][1])
+        dr_pres.append(steps_arr[k][i][2])
+        dr_pres_other.append(steps_arr[k][i][3])
+        dr_time.append(i / 10)
+    # print(dr_pres)
+    dr_pos = calibrate(dr_pos, 17, 180)
+    # прикрепляем нулевой чтобы шаг закончился в одной точке
+    dr_pos.append(dr_pos[0])
+    dr_pres = calibrate(dr_pres, 1, -989)
+    dr_pres.append(dr_pres[0])
+    dr_pos_other = calibrate(dr_pos_other, 17, 180)
+    dr_pos_other.append(dr_pos_other[0])
+    dr_pres_other = calibrate(dr_pres_other, 1, -1001)
+    # первая мне не нравится
+    # dr_pres_other.pop(1)
+    dr_pres_other.append(dr_pres_other[0])
+    return dr_time, dr_pos_other, dr_pres_other
+
+
 dtw_pic(u1, Mom12)
 dtw_pic(u1, Mom22, filename='dtw_u1_qy.png',
         legend=[r'$M_{12}$', r'$\Omega_1 Q_{y}$'], title="Момент в коленном суставе, $Q_y$ и разность углов")
-dtw_pic(norm_list(est1), norm_list(est4), title="Энергетические оценки для одного шарнира", filename="dtw_estimations3.png",
+dtw_pic(norm_list(est1), norm_list(est4), title="Энергетические оценки для одного шарнира",
+        filename="dtw_estimations3.png",
         ylabel='estimations, Н*м/с',
         legend=[r"$M_{real} \Omega$', " + str(int1), r"$M_{real}$, " + str(int4)])
-dtw_pic(norm_list(est1), norm_list(est3), title="Энергетические оценки, реакция и разность углов", filename="dtw_estimations2.png",
+dtw_pic(norm_list(est1), norm_list(est3), title="Энергетические оценки, реакция и разность углов",
+        filename="dtw_estimations2.png",
         ylabel='estimations',
         legend=[r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(int3)])
+
+a, b, c = exp_preparations()
+b = np.radians(b)
+c = [i * 5 for i in c]
+dtw_pic(Omega1, b, title="Шаг (угол): сравнение эксперимента и теории", filename="dtw_angles.png",
+        ylabel=r"$\Omega, рад$",
+        legend=[r"$\Omega_Т$", r"$\Omega_Э$"])
+dtw_pic(R1y, c, title="Шаг (сила реакции): сравнение эксперимента и теории", filename="dtw_forces.png",
+        ylabel=r"$R_{1y}, H$",
+        legend=[r"$R_Т$", r"$R_Э$"])
