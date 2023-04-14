@@ -28,6 +28,7 @@ T = 1.1  # период двойного шага
 omega = 2 * 3.14 / T  # угловая скорость
 dt = 0.05  # изменение времени
 FULLTIME = 7.7
+opt_coef = 0.4207763870043699
 t = np.arange(0, 7.7, dt)
 
 
@@ -191,7 +192,7 @@ def count_common_Q(x0, y0, alpha1, beta1, alpha2, beta2, psi):
     return Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2
 
 
-# реакции опоры (статика)
+# реакции опоры (stat+dyn)
 def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
     R1_ver = np.zeros(len(t))
     R1_hor = np.zeros(len(t))
@@ -224,6 +225,20 @@ def count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy):
             R2y[i] = Qy[i]
             # print("R2 =", R2_ver[i], R2_hor[i])"""
     return R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x
+
+
+def full_esteem_test():
+    for vel in (1, 1.25, 1.6, 1.85, 1.99):
+        res = process(vel)
+        filename = 'est_walk_v' + str(vel) + '.txt'
+        f = open(filename, 'w')
+        try:
+            print("%.2f " % round(res[0] * vel, 2), file=f)
+            print("%.2f " % round(res[1] * vel, 2), file=f)
+            print("%.2f " % round(res[2] * vel, 2), file=f)
+        finally:
+            f.close()
+    return
 
 
 def energy_estimations(alpha1, beta1, M12, R1y, type_=1):
@@ -266,6 +281,24 @@ def energy_estimations(alpha1, beta1, M12, R1y, type_=1):
     return est1, est2, est3, est4
 
 
+def energy_sums(alpha1, beta1, M12, R1y):
+    Omega1 = - np.array(alpha1) + np.array(beta1)
+    dOmega1 = deriv1(Omega1)
+    est1 = [abs(M12[i] * dOmega1[i]) for i in range(len(dOmega1))]
+    est3 = [abs(Omega1[i] * R1y[i] * dOmega1[i]) for i in range(len(Omega1))]
+    int1, int2, int3 = 0, 0, 0
+    for i in range(len(est1)):
+        int1 += est1[i] * dt
+        int2 += est3[i] * dt
+        int3 += est3[i] * dt * opt_coef
+    tm = dt*len(Omega1)
+    int1 = int1 / tm
+    int2 = int2 / tm
+    int3 = int3 / tm
+
+    return int1, int2, int3
+
+
 def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
     # реакции и момент в стопе переносной ноги
     R2x, R2y, M21 = np.zeros(len(alpha1)), np.zeros(len(alpha1)), np.zeros(len(alpha1))
@@ -302,7 +335,7 @@ def find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2):
     return M11, M21, m12, m22, m13, m23
 
 
-def movement_configurations(type_=1):
+def movement_configurations(type_=1, velocity=1.5):
     # 1 - walk, 2 - fast walk, 3 - run
     x1_2, y1_2, x2_2, y2_2 = [], [], [], []
     x0 = np.linspace(0, 7.7, len(t))
@@ -338,36 +371,38 @@ def movement_configurations(type_=1):
         for i in range(7):
             y2_2[i * 22: (i + 1) * 22] = y2_2p
     elif type_ == 2:
-        T = 0.7  # период двойного шага
+        T = 1.1 / velocity  # период двойного шага
         omega = 2 * 3.14 / T
         # пятка 1
-        period = np.arange(0, 0.7, dt)
-        half = np.arange(0, 0.35, dt)
-        n_dots = 14
+        period = np.arange(0, T, dt)
+        half = np.arange(0, T / 2, dt)
+        n_dots = len(period)
+        n_steps = len(t) // len(period)
+        print("v=", velocity, "T=", T, "n_dots=", n_dots, "n_steps=", len(t), "/", len(period), '=', n_steps)
         x1_2p = np.copy(period)
         x1_2p[:len(x1_2p) // 2] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
         x1_2p[len(x1_2p) // 2:] = x1_2p[len(x1_2p) // 2 - 1]
         x1_2 = np.copy(x0)
-        for i in range(11):
+        for i in range(n_steps):
             x1_2[i * n_dots: (i + 1) * n_dots] = x1_2p + np.ones(n_dots) * (x0[i * n_dots] - L_step / 2)
         y1_2p = np.zeros(len(period))
         y1_2p[:len(x1_2p) // 2] = Ampl * (1 - np.cos(omega * half * 2))
         y1_2p[len(x1_2p) // 2:] = 0
         y1_2 = np.zeros(len(t))
-        for i in range(11):
+        for i in range(n_steps):
             y1_2[i * n_dots: (i + 1) * n_dots] = y1_2p
         # пятка 2
         x2_2p = np.copy(period)
         x2_2p[len(x1_2p) // 2:] = half * 2 - L_step / 4 * np.sin(omega * half * 2)
         x2_2p[:len(x2_2p) // 2] = x2_2p[0]
         x2_2 = np.copy(x0)
-        for i in range(11):
+        for i in range(n_steps):
             x2_2[i * n_dots: (i + 1) * n_dots] = x2_2p + np.ones(n_dots) * (x0[i * n_dots] + L_step / 2)
         y2_2p = np.zeros(len(period))
         y2_2p[len(x1_2p) // 2:] = Ampl * (1 - np.cos(omega * half * 2))
         y2_2p[:len(x1_2p) // 2] = 0
         y2_2 = np.zeros(len(t))
-        for i in range(11):
+        for i in range(n_steps):
             y2_2[i * n_dots: (i + 1) * n_dots] = y2_2p
     elif type_ == 3:
         # пятка 1
@@ -380,7 +415,41 @@ def movement_configurations(type_=1):
     return x1_2, y1_2, x2_2, y2_2
 
 
+def process(velocity=1):
+    psi = np.radians(-4.3 + 2.7 * sin(2 * omega * t) - 1.5 * cos(2 * omega * t))
+    # таз
+    x0 = np.linspace(0, FULLTIME * velocity, len(t))
+    y0 = np.ones(len(x0)) * h
+    # 1 - walk, 2 - fast walk, 3 - run
+    type_ = 2
+    x1_2, y1_2, x2_2, y2_2 = movement_configurations(type_, velocity)
+    # пятка 1: x1_2 , y1_2
+    # колено 1
+    x1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[0] for i in range(len(t))]
+    y1_1 = [find_knee(x0[i], y0[i], x1_2[i], y1_2[i])[1] for i in range(len(t))]
+    # пятка 2: x2_2 , y2_2
+    # колено 2
+    x2_1 = [find_knee(x0[i], y0[i], x2_2[i], y2_2[i])[0] for i in range(len(t))]
+    y2_1 = [find_knee(x0[i], y0[i], x2_2[i], y2_2[i])[1] for i in range(len(t))]
+
+    # найдем углы
+    alpha1, beta1, alpha2, beta2 = find_angles(x0, y0, x1_1, y1_1, x1_2, y1_2, x2_1, y2_1, x2_2, y2_2)
+
+    # energy, Q = count_energy(alpha1, beta1, alpha2, beta2, psi, q1, q2, u1, u2)
+    Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2 = count_common_Q(x0, y0, alpha1, beta1, alpha2, beta2, psi)
+    # найдем моменты
+    # решая систему уравнений для поиска qi, ui
+    # M11, M21, M12, M22, M13, M23 = w1, w2, u1, u2, q1, q2
+    w1, w2, u1, u2, q1, q2 = find_moments(alpha1, beta1, Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2)
+    R1_ver, R1_hor, R2_ver, R2_hor, R1y, R1x, R2y, R2x = count_reactions(alpha1, beta1, alpha2, beta2, psi, Qx, Qy)
+    print("energy estimating...")
+    i1, i2, i3 = energy_sums(alpha1, beta1, u1, R1y)
+
+    return i1, i2, i3
+
+
 if __name__ == "__main__":
+    full_esteem_test()
     print("start")
     # угол наклона корпуса 2-периодичный зададим вручную
     psi = np.radians(-4.3 + 2.7 * sin(2 * omega * t) - 1.5 * cos(2 * omega * t))
