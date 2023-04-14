@@ -117,11 +117,11 @@ finally:
 
 # построение графика всех параметров от времени на одном графике
 def graph_draw(title, t, data, filename, ylabel='angles, Рад',
-               legend=None):
+               xlabel="t, с", legend=None):
     if legend is None:
         legend = ['alpha1', 'alpha2', 'beta1', 'beta2', 'psi']
     plt.title(title)
-    plt.xlabel("t, с")
+    plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.grid()
     for d in data:
@@ -146,7 +146,31 @@ def graph_areas(title, t, data, filename, ylabel='estimations',
         plt.fill_between(t, d, label=legend[i], alpha=0.4)
         i += 1
     plt.text(.8, .8, 'Coef = 0.421', style='italic',
-            bbox={'facecolor': 'green', 'alpha': 0.5, 'pad': 10})
+             bbox={'facecolor': 'green', 'alpha': 0.5, 'pad': 10})
+    plt.legend()
+    plt.savefig(filename)
+    plt.figure()
+    plt.cla()
+
+
+def graph_vel_est(title, t, data, filename, ylabel='estimations',
+                  xlabel='velocity, м/с', legend=None):
+    if legend is None:
+        legend = [r"$M_{real} \Omega$'", r"$\Omega$ $R_{1y}$ $\Omega$'"]
+    plt.title(title)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.grid()
+    i = 0
+    for d in data:
+        model = np.poly1d(np.polyfit(t, d, 2))
+        polyline = np.linspace(1, 2, 50)
+        plt.scatter(t, d)
+        coefs = model.c
+        plt.plot(polyline, model(polyline),
+                 label=legend[i] + '=' + str(round(coefs[0], 2)) + r'$v^2 $' + str(
+                     round(coefs[1], 2)) + r'$v +$' + str(round(coefs[2], 2)))
+        i += 1
     plt.legend()
     plt.savefig(filename)
     plt.figure()
@@ -165,7 +189,7 @@ def find_coef_control(e1, e3):
 
 
 if __name__ == "__main__":
-    #opt_coef = find_coef_control(est1, est3).x[0]
+    # opt_coef = find_coef_control(est1, est3).x[0]
     opt_coef = 0.4207763870043699
     print("OPTIMAL CONTROL COEF:", opt_coef)
     graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles.png", ylabel='angles, Рад',
@@ -203,4 +227,16 @@ if __name__ == "__main__":
     graph_areas("Энергетические оценки с оптимальным коэффициентом усиления", t, [est1, [i * opt_coef for i in est3]],
                 "estimations_opt.png",
                 ylabel='estimations',
-                legend=[r"$M_{real} \Omega$', " + str(int1), r"$\Omega$ $R_{1y}$ $\Omega$', " + str(round(int3 * opt_coef, 2))])
+                legend=[r"$M_{real} \Omega$', " + str(int1),
+                        r"$\Omega$ $R_{1y}$ $\Omega$', " + str(round(int3 * opt_coef, 2))])
+    vels = [1, 1.25, 1.5, 1.75, 2]
+    ests_real = [182.64, 187.37, 219.34, 240.93, 344.57]
+    ests_appr = [148.36, 147.79, 155.68, 204.98, 285.26]
+    graph_draw("Энергетические оценки в зависимости от скорости", vels, [ests_real, ests_appr],
+               "estimations_vel.png",
+               ylabel='estimations', xlabel='velocity, м/с',
+               legend=[r"$M_{real} \Omega$'", r"$\Omega$ $R_{1y}$ $\Omega$'"])
+    graph_vel_est("Энергетические оценки в зависимости от скорости", vels, [ests_real, ests_appr],
+                  "estimations_vel_sq.png",
+                  ylabel='estimations', xlabel='velocity, м/с',
+                  legend=[r"$M_{real} \Omega$'", r"$\Omega$ $R_{1y}$ $\Omega$'"])
