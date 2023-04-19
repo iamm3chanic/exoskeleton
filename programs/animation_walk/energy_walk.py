@@ -27,7 +27,7 @@ Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2 = [], [], [], [], [], [], []
 R1_ver, R1_hor, R2_ver, R2_hor = [], [], [], []
 u1, u2, q1, q2 = [], [], [], []
 R1x, R1y, R2x, R2y = [], [], [], []
-est1, est2, est3 = [], [], []
+est1, est2, est3, est4 = [], [], [], []
 Mom12, Mom22 = [], []
 Omega1, Omega2 = [], []
 Q = []
@@ -36,12 +36,15 @@ type_ = 1
 filename = 'track_energy_react.txt'
 if type_ == 1:
     filename = 'track_walk.txt'
+    est_file = 'est_walk.txt'
     gif = 'walk.gif'
 elif type_ == 2:
     filename = 'track_fast_walk.txt'
+    est_file = 'est_fast_walk.txt'
     gif = 'fast_walk.gif'
 elif type_ == 3:
     filename = 'track_run.txt'
+    est_file = 'est_run.txt'
     gif = 'run.gif'
 f = open(filename, 'r')
 
@@ -126,13 +129,15 @@ legend_5 = ax_t.text(0.35, 0.68, '', transform=ax_t.transAxes)
 R2_hor_template = r'$R_{2x}$ = %.1fН'
 legend_6 = ax_t.text(0.35, 0.57, '', transform=ax_t.transAxes)
 est1_template = r'$Est_{1}$ = %.1fН*м/с'
-legend_7 = ax_t.text(0.02, 0.57, '', transform=ax_t.transAxes)
+legend_7 = ax_t.text(0.68, 0.68, '', transform=ax_t.transAxes)
 est3_template = r'$Est_{2}$ = %.1fН*рад/с'
-legend_8 = ax_t.text(0.02, 0.46, '', transform=ax_t.transAxes)
+legend_8 = ax_t.text(0.68, 0.57, '', transform=ax_t.transAxes)
 omega1_template = r'$\Omega_{1}$ = %.1fрад'
 legend_9 = ax_t.text(0.68, 0.9, '', transform=ax_t.transAxes)
 mom12_template = r'$M_{12}$ = %.1fН*м'
 legend_10 = ax_t.text(0.68, 0.79, '', transform=ax_t.transAxes)
+Qy_template = r'$Q_{y}$ = %.1fН*м'
+legend_11 = ax_t.text(0.02, 0.57, '', transform=ax_t.transAxes)
 
 
 def init():
@@ -150,7 +155,8 @@ def init():
     legend_8.set_text('')
     legend_9.set_text('')
     legend_10.set_text('')
-    return line1, line2, line3, time_text, legend_1, legend_2, legend_3, legend_4, legend_5, legend_6, legend_7, legend_8, legend_9, legend_10
+    legend_11.set_text('')
+    return line1, line2, line3, time_text, legend_1, legend_2, legend_3, legend_4, legend_5, legend_6, legend_7, legend_8, legend_9, legend_10, legend_11
 
 
 def animate(i):
@@ -175,16 +181,17 @@ def animate(i):
     legend_8.set_text(est3_template % (est3[i]))
     legend_9.set_text(omega1_template % (Omega1[i]))
     legend_10.set_text(mom12_template % (Mom12[i]))
-    return line1, line2, line3, time_text, legend_1, legend_2, legend_3, legend_4, legend_5, legend_6, legend_7, legend_8, legend_9, legend_10
+    legend_11.set_text(Qy_template % (Qy[i]))
+    return line1, line2, line3, time_text, legend_1, legend_2, legend_3, legend_4, legend_5, legend_6, legend_7, legend_8, legend_9, legend_10, legend_11
 
 
 ani = animation.FuncAnimation(fig, animate, range(1, len(t)),
                               interval=dt * 1000, blit=True, init_func=init)
 plt.show()
 
-# uncomment this to save!
+"""# uncomment this to save!
 # saving to m4 using ffmpeg writer
 writervideo = animation.FFMpegWriter(fps=40, extra_args=['-vcodec', 'libx264'])
-ani.save(gif, writer='Pillow')
+ani.save(gif, writer='Pillow')"""
 
 plt.close()
