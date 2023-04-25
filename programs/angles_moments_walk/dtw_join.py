@@ -140,7 +140,7 @@ finally:
 
 
 def dtw_pic(array1, array2, filename='dtw_u1_m12.png', ylabel='moment+angle',
-            legend=[r'$M_{12}$', r'$\Omega_1 R_{1y}$'], title="Момент в коленном суставе, реакция и разность углов"):
+            legend=[r'$M_{12}$', r'$\Omega_1 R_{1y}$'], title="Момент в коленном суставе, реакция и разность углов", ylim=None):
     fig, ax = plt.subplots(figsize=(7, 5))
     # ???
     # array1 = norm_list(array1)
@@ -148,7 +148,12 @@ def dtw_pic(array1, array2, filename='dtw_u1_m12.png', ylabel='moment+angle',
     plt.xlabel("t, с")
     plt.ylabel(ylabel)
     plt.grid()
+    if ylim is not None:
+        plt.ylim(ylim)
+    #t1 = np.linspace(0, 22, np.shape(array1)[0])
+    #t2 = np.linspace(0, 22, np.shape(array2)[0])
     array1 = np.reshape(np.array(array1), (len(array1), 1))
+    #array2 = [i*1.1/0.95 for i in array2]
     array2 = np.reshape(np.array(array2), (len(array2), 1))
     dtw_distance, warp_path = fastdtw(array1, array2, dist=euclidean)
     for [map_x, map_y] in warp_path:
@@ -264,10 +269,11 @@ dtw_pic(norm_list(est1), norm_list(est3), title="Энергетические о
 
 a, b, c = exp_preparations()
 b = np.radians(b)
-c = [i * 5 for i in c]
+#b = [i*1.1/0.95  for i in b]
+c = [i * 5  for i in c]
 dtw_pic(Omega1, b, title="Шаг (угол): сравнение эксперимента и теории", filename="dtw_angles.png",
         ylabel=r"$\Omega, рад$",
-        legend=[r"$\Omega_Т$", r"$\Omega_Э$"])
+        legend=[r"$\Omega_Т$", r"$\Omega_Э$"], ylim=(1, 3.5))
 dtw_pic(R1y, c, title="Шаг (сила реакции): сравнение эксперимента и теории", filename="dtw_forces.png",
         ylabel=r"$R_{1y}, H$",
         legend=[r"$R_Т$", r"$R_Э$"])
