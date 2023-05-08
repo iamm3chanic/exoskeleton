@@ -26,7 +26,7 @@ x0, y0, x1_1, y1_1, x1_2, y1_2, x2_1, y2_1, x2_2, y2_2, x3, y3 = [], [], [], [],
 alpha1, beta1, alpha2, beta2, psi, energy_p = [], [], [], [], [], []
 Qx, Qy, Qpsi, Qa1, Qa2, Qb1, Qb2 = [], [], [], [], [], [], []
 R1_ver, R1_hor, R2_ver, R2_hor = [], [], [], []
-u1, u2, q1, q2 = [], [], [], []
+u1, u2, q1, q2, w1, w2 = [], [], [], [], [], []
 R1x, R1y, R2x, R2y = [], [], [], []
 est1, est2, est3, est4 = [], [], [], []
 Mom12, Mom22 = [], []
@@ -96,8 +96,10 @@ try:
         est2.append(float(string[39]))
         est3.append(float(string[40]))
         est4.append(float(string[41]))
+        w1.append(float(string[42]))
+        w2.append(float(string[43]))
         Omega1.append(np.pi - alpha1[i] + beta1[i])
-        Omega2.append((np.pi - alpha2[i] + beta2[i]) * 180 / np.pi)
+        Omega2.append(np.pi - alpha2[i] + beta2[i])
         Mom12.append(Omega1[i] * R1y[i])
         Mom22.append(Omega1[i] * Qy[i])
 finally:
@@ -187,8 +189,7 @@ def find_coef_control(e1, e3):
     coef = minimize(fun, 1, method='SLSQP', bounds=[(0, 5)])
     return coef
 
-
-if __name__ == "__main__":
+def real_full_test():
     # opt_coef = find_coef_control(est1, est3).x[0]
     opt_coef = 0.4207763870043699
     print("OPTIMAL CONTROL COEF:", opt_coef)
@@ -240,3 +241,23 @@ if __name__ == "__main__":
                   "estimations_vel_sq.png",
                   ylabel='estimations', xlabel='velocity, м/с',
                   legend=[r"$M_{real} \Omega$'", r"$\Omega$ $R_{1y}$ $\Omega$'"])
+
+
+def dlya_otcheta():
+    alpha1[-1] = alpha1[0]
+    alpha2[-1] = alpha2[0]
+    beta1[-1] = beta1[0]
+    beta2[-1] = beta2[0]
+    w2[:11] = w1[12:]
+    w2[12:] = w1[:11]
+    graph_draw("Обобщенные координаты", t, [alpha1, alpha2, beta1, beta2, psi], "angles_w.png", ylabel='angles, Рад',
+               legend=[r'$\alpha_1$', r'$\alpha_2$', r'$\beta_1$', r'$\beta_2$', r'$\psi$'])
+    graph_draw("Угол сгиба из обобщенных координат", t, [Omega1, Omega2], "angles_w_sgib.png", ylabel='angles, Рад',
+               legend=[r'$\Omega_1$ - переносная/опорная', r'$\Omega_2$ - опорная/переносная'])
+    graph_draw("Моменты в голеностопных суставах", t, [w1, w2], "moments_golen.png", ylabel='moments, Н*м',
+               legend=[r'$М_{11}$', r'$М_{21}$'])
+
+
+if __name__ == "__main__":
+    dlya_otcheta()
+    #real_full_test()

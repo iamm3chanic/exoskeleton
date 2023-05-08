@@ -8,10 +8,11 @@ G = 9.8  # ускорение свободного падения, м/с^2
 L1 = 0.59  # длина бедра, м
 L2 = 0.53  # длина голени, м
 L3 = 0.75  # длина корпуса, м
+M0 = 6  # масса таза, кг
 M1 = 9.9  # масса бедра, кг
-M2 = 7.2  # масса голени, кг
+M2 = 7.1  # масса голени, кг
 M3 = 25.  # масса корпуса, кг
-M = M1 + M2 + M3  # общая масса
+M = 2*M1 + 2*M2 + M3  # общая масса
 h = 1.11  # высота точки подвеса
 s = 0.2  # опорный сдвиг
 L_step = 0.5  # длина шага
@@ -449,7 +450,9 @@ def process(velocity=1):
 
 
 if __name__ == "__main__":
-    full_esteem_test()
+    #print(J, Ja0, Ja, Jb)
+    # UNCOMMENT FOR FULL TEST
+    # full_esteem_test()
     print("start")
     # угол наклона корпуса 2-периодичный зададим вручную
     psi = np.radians(-4.3 + 2.7 * sin(2 * omega * t) - 1.5 * cos(2 * omega * t))
@@ -505,7 +508,8 @@ if __name__ == "__main__":
         # R1_ver, R1_hor, R2_ver, R2_hor
         # u1, u2, q1, q2,
         # R1x, R1y, R2x, R2y
-        # est1, est2, est3, est4")
+        # est1, est2, est3, est4
+        # w1, w2")
         for i in range(len(t)):
             print("%.2f " % round(t[i], 2),
                   "%.2f " % round(x0[i], 2), "%.2f " % round(y0[i], 2),
@@ -530,6 +534,7 @@ if __name__ == "__main__":
                   "%.2f " % round(R2x[i], 2), "%.2f " % round(R2y[i], 2),
                   "%.2f " % round(est1[i], 2), "%.2f " % round(est2[i], 2),
                   "%.2f " % round(est3[i], 2), "%.2f " % round(est4[i], 2),
+                  "%.2f " % round(w1[i], 2), "%.2f " % round(w2[i], 2),
                   file=f)
     finally:
         f.close()
